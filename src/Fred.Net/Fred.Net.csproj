@@ -45,6 +45,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types\Enums\ReleaseDateOrderBy.cs" />
     <Compile Include="Types\Enums\ReleaseOrderBy.cs" />
+    <Compile Include="Types\Enums\SeriesFilterValue.cs" />
+    <Compile Include="Types\Enums\SeriesObservationOutputType.cs" />
+    <Compile Include="Types\Enums\SeriesObservationFrequency.cs" />
+    <Compile Include="Types\Enums\SeriesObservationAggregationMethod.cs" />
+    <Compile Include="Types\Enums\SeriesObservationUnit.cs" />
+    <Compile Include="Types\Enums\SeriesSearchOrderBy.cs" />
+    <Compile Include="Types\Enums\SeriesSearchType.cs" />
+    <Compile Include="Types\VintageDate.cs" />
     <Compile Include="Types\Source.cs" />
     <Compile Include="Types\ReleaseDate.cs" />
     <Compile Include="Types\Release.cs" />
@@ -56,6 +64,7 @@
     <Compile Include="Types\Enums\TagGroupId.cs" />
     <Compile Include="Types\Series.cs" />
     <Compile Include="Types\Element.cs" />
+    <Compile Include="Types\Observation.cs" />
     <Compile Include="Types\Tag.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

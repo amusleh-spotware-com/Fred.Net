@@ -16,11 +16,11 @@ namespace ConsoleTest
             {
                 try
                 {
-                    List<Element> result = await client.GetReleaseTables(53, 12886);
+                    List<VintageDate> result = await client.GetSeriesVintageDates("GNPCA");
 
                     Console.WriteLine($"Count: {result.Count}");
 
-                    Console.WriteLine($"Id: {result[0].Children.Count}");
+                    Console.WriteLine($"Id: {result[0].Date}");
                 }
                 catch (Exception ex)
                 {

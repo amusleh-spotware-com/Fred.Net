@@ -2,17 +2,15 @@
 
 namespace Fred.Net.Types.Enums
 {
-    public enum SeriesFilterVariable
+    public enum SeriesFilterValue
     {
-        None,
+        [Description("macro")]
+        Macro,
 
-        [Description("units")]
-        Units,
+        [Description("regional")]
+        Regional,
 
-        [Description("frequency")]
-        Frequency,
-
-        [Description("seasonal_adjustment")]
-        SeasonalAdjustment,
+        [Description("all")]
+        All,
     }
 }

@@ -40,15 +40,15 @@ namespace Fred.Net
             throw new InvalidEnumArgumentException("Couldn't find any enum value that matches provided description");
         }
 
-        public static string GetTagNamesSeparatedBySemicolon(List<string> tags)
+        public static string GetStringSeparatedBySemicolon(List<string> tags)
         {
-            string tagNames = string.Empty;
+            string result = string.Empty;
 
-            tags.ForEach(tag => tagNames += tag + ";");
+            tags.ForEach(tag => result += tag + ";");
 
-            tagNames = tagNames.Remove(tagNames.Length - 1);
+            result = result.Remove(result.Length - 1);
 
-            return tagNames;
+            return result;
         }
 
         public static T Deserialize<T>(string xml)
@@ -62,6 +62,19 @@ namespace Fred.Net
             return result;
         }
 
-        public static string FormatTime(DateTime time) => time.ToString("yyyy-MM-dd");
+        public static string FormatDate(DateTime date) => date.ToString("yyyy-MM-dd");
+
+        public static string FormatTime(DateTime time) => time.ToString("yyyyMMddHHmm");
+
+        public static string GetDatesSeparatedByComma(List<DateTime> dates)
+        {
+            string result = string.Empty;
+
+            dates.ForEach(date => result += FormatDate(date) + ",");
+
+            result = result.Remove(result.Length - 1);
+
+            return result;
+        }
     }
 }
