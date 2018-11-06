@@ -43,14 +43,19 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\Enums\ReleaseDateOrderBy.cs" />
+    <Compile Include="Types\Enums\ReleaseOrderBy.cs" />
+    <Compile Include="Types\Source.cs" />
+    <Compile Include="Types\ReleaseDate.cs" />
+    <Compile Include="Types\Release.cs" />
     <Compile Include="Types\Category.cs" />
-    <Compile Include="Types\Enums\Frequency.cs" />
     <Compile Include="Types\Enums\SeriesFilterVariable.cs" />
     <Compile Include="Types\Enums\TagOrderBy.cs" />
     <Compile Include="Types\Enums\SortOrder.cs" />
     <Compile Include="Types\Enums\SeriesOrderBy.cs" />
     <Compile Include="Types\Enums\TagGroupId.cs" />
     <Compile Include="Types\Series.cs" />
+    <Compile Include="Types\Element.cs" />
     <Compile Include="Types\Tag.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>

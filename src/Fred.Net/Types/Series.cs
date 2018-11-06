@@ -1,5 +1,4 @@
-﻿using Fred.Net.Types.Enums;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Xml.Serialization;
 
@@ -27,7 +26,7 @@ namespace Fred.Net.Types
         public DateTime ObservationEnd { get; set; }
 
         [XmlAttribute("frequency")]
-        public Frequency Frequency { get; set; }
+        public string Frequency { get; set; }
 
         [XmlAttribute("frequency_short")]
         public string FrequencyShort { get; set; }

@@ -16,9 +16,11 @@ namespace ConsoleTest
             {
                 try
                 {
-                    List<Tag> tags = await client.GetCategoryRelatedTags(125, new List<string> { "services", "quarterly" });
+                    List<Element> result = await client.GetReleaseTables(53, 12886);
 
-                    Console.WriteLine($"Count: {tags.Count}");
+                    Console.WriteLine($"Count: {result.Count}");
+
+                    Console.WriteLine($"Id: {result[0].Children.Count}");
                 }
                 catch (Exception ex)
                 {

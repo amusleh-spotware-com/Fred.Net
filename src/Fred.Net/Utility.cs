@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Reflection;
+using System.Xml.Serialization;
 
 namespace Fred.Net
 {
@@ -48,5 +50,18 @@ namespace Fred.Net
 
             return tagNames;
         }
+
+        public static T Deserialize<T>(string xml)
+        {
+            StringReader reader = new StringReader(xml);
+
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
+
+            T result = (T)serializer.Deserialize(reader);
+
+            return result;
+        }
+
+        public static string FormatTime(DateTime time) => time.ToString("yyyy-MM-dd");
     }
 }
