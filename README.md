@@ -20,3 +20,5 @@ You can call all API requests via client class methods and each call will return
 For using requests options parameters use the keyword arguments of each request method.
 
 The library uses XML format for getting that data.
+
+The target framework is .Net Standard 2.0
