@@ -8,7 +8,7 @@ namespace Fred.Net.Tests
     [TestClass()]
     public class ClientTests
     {
-        private string _apiKey = "eaa1d5cae31ccc11b9e5a0e807ffb618";
+        private string _apiKey = "";
 
         [TestMethod()]
         public void ClientTest()

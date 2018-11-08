@@ -12,7 +12,7 @@ namespace ConsoleTest
             {
                 try
                 {
-                    Client client = new Client("eaa1d5cae31ccc11b9e5a0e807ffb618");
+                    Client client = new Client("");
 
                     var result = await client.GetSources();
 
