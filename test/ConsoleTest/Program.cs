@@ -1,7 +1,5 @@
 ﻿using Fred.Net;
-using Fred.Net.Types;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ConsoleTest
@@ -16,11 +14,11 @@ namespace ConsoleTest
             {
                 try
                 {
-                    List<VintageDate> result = await client.GetSeriesVintageDates("GNPCA");
+                    var result = await client.GetTagsSeries(new System.Collections.Generic.List<string> { "slovenia", "food", "oecd" });
 
                     Console.WriteLine($"Count: {result.Count}");
 
-                    Console.WriteLine($"Id: {result[0].Date}");
+                    Console.WriteLine($"Id: {result[0].Id}");
                 }
                 catch (Exception ex)
                 {

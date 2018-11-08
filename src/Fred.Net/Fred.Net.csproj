@@ -50,6 +50,7 @@
     <Compile Include="Types\Enums\SeriesObservationFrequency.cs" />
     <Compile Include="Types\Enums\SeriesObservationAggregationMethod.cs" />
     <Compile Include="Types\Enums\SeriesObservationUnit.cs" />
+    <Compile Include="Types\Enums\SourceOrderBy.cs" />
     <Compile Include="Types\Enums\SeriesSearchOrderBy.cs" />
     <Compile Include="Types\Enums\SeriesSearchType.cs" />
     <Compile Include="Types\VintageDate.cs" />

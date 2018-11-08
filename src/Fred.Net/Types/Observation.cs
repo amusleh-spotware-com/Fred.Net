@@ -7,10 +7,10 @@ namespace Fred.Net.Types
     public class Observation
     {
         [XmlAttribute("realtime_start")]
-        public DateTime RealTimeStart { get; set; }
+        public DateTime RealtimeStart { get; set; }
 
         [XmlAttribute("realtime_end")]
-        public DateTime RealTimeEnd { get; set; }
+        public DateTime RealtimeEnd { get; set; }
 
         [XmlAttribute("date")]
         public DateTime Date { get; set; }
