@@ -454,7 +454,7 @@ namespace Fred.Net
                 {"offset", offset.ToString() },
                 {"order_by", Utility.GetDescription(orderBy) },
                 {"sort_order", Utility.GetDescription(sortOrder) },
-                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString() }
+                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
             if (realtimeStart.HasValue)
@@ -529,7 +529,7 @@ namespace Fred.Net
         /// <param name="includeReleaseDatesWithNoData">Determines whether release dates with no data available are returned, optional, default: false</param>
         /// <returns>List<Release></returns>
         public async Task<List<ReleaseDate>> GetReleaseDates(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, ReleaseDateOrderBy orderBy = ReleaseDateOrderBy.Date, SortOrder sortOrder = SortOrder.Ascending,
+            int limit = 10000, int offset = 0, ReleaseDateOrderBy orderBy = ReleaseDateOrderBy.Date, SortOrder sortOrder = SortOrder.Ascending,
             bool includeReleaseDatesWithNoData = false)
         {
             string url = $"release/dates";
@@ -541,7 +541,7 @@ namespace Fred.Net
                 {"offset", offset.ToString() },
                 {"order_by", Utility.GetDescription(orderBy) },
                 {"sort_order", Utility.GetDescription(sortOrder) },
-                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString() }
+                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
             if (realtimeStart.HasValue)
