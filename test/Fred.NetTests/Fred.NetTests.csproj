@@ -64,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fred.Net\Fred.Net.csproj">
-      <Project>{74dd83d0-4716-497a-a642-8e82c0082360}</Project>
+      <Project>{0c7dca39-d892-4598-a7a1-c2ddad6977d5}</Project>
       <Name>Fred.Net</Name>
     </ProjectReference>
   </ItemGroup>
