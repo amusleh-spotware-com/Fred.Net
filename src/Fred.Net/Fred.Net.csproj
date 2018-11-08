@@ -4,6 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Fred.Net</RootNamespace>
     <AssemblyName>Fred.Net</AssemblyName>
+    <Description>A .Net library for interacting with St. Louis Fed API</Description>
+    <Copyright></Copyright>
+    <PackageLicenseUrl>https://github.com/afhacker/Fred.Net/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/afhacker/Fred.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/afhacker/Fred.Net</RepositoryUrl>
+    <PackageTags>Fed, Fred</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
 </Project>
