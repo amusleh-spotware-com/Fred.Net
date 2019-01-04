@@ -40,6 +40,8 @@ namespace Fred.Net
             _apiKey = apiKey;
 
             _webClient = new WebClient();
+            
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
             _webClient.BaseAddress = _baseUrl;
         }
