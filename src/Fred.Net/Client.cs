@@ -1,5 +1,8 @@
-﻿using Fred.Net.Models;
-using Fred.Net.Enums;
+﻿using Fred.Net.Enums;
+using Fred.Net.Models;
+using Fred.Net.Parameters;
+using Fred.Net.Parameters.Abstractions;
+using Fred.Net.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -7,7 +10,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
-using Fred.Net.Utils;
 
 namespace Fred.Net
 {
@@ -33,9 +35,10 @@ namespace Fred.Net
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-            _webClient = new WebClient();
-
-            _webClient.BaseAddress = baseUrl;
+            _webClient = new WebClient
+            {
+                BaseAddress = baseUrl
+            };
         }
 
         #region Properties
@@ -79,24 +82,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>List<Category></returns>
-        public async Task<List<Category>> GetCategoryChildren(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<List<Category>> GetCategoryChildren(CategoryParameters parameters)
         {
             string url = $"category/children";
 
             NameValueCollection query = new NameValueCollection
             {
-                { "category_id", id.ToString() },
+                { "category_id", parameters.Id.ToString() },
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -122,24 +117,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>List<Category></returns>
-        public async Task<List<Category>> GetCategoryRelated(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<List<Category>> GetCategoryRelated(CategoryParameters parameters)
         {
             string url = $"category/related";
 
             NameValueCollection query = new NameValueCollection
             {
-                { "category_id", id.ToString() },
+                { "category_id", parameters.Id.ToString() },
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -171,46 +158,35 @@ namespace Fred.Net
         /// <param name="tags">A list of tag names that series match all of, optional, no filtering by tags by default</param>
         /// <param name="excludeTags">A list of tag names that series match none of, it requires that parameter tags also be set to limit the number of matching series, optional, no filtering by tags by default.</param>
         /// <returns>List<Series></returns>
-        public async Task<List<Series>> GetCategorySeries(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, SeriesOrderBy orderBy = SeriesOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending,
-            SeriesFilterVariable filterVariable = SeriesFilterVariable.None, string filterValue = null, List<string> tags = null,
-            List<string> excludeTags = null)
+        public async Task<List<Series>> GetCategorySeries(CategorySeriesParameters parameters)
         {
             string url = $"category/series";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"category_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"category_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (parameters.FilterVariable != SeriesFilterVariable.None)
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("filter_variable", EnumDescription.GetDescription(parameters.FilterVariable));
+                query.Add("filter_value", parameters.FilterValue);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            if (filterVariable != SeriesFilterVariable.None)
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
-                query.Add("filter_value", filterValue);
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -246,44 +222,34 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="tags">A list of tag names to only include in the response, optional, no filtering by tags by default</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetCategoryTags(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending, string searchText = null,
-            TagGroupId tagGroupId = TagGroupId.None, List<string> tags = null)
+        public async Task<List<Tag>> GetCategoryTags(TagParameters parameters)
         {
             string url = $"category/tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"category_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"category_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -316,46 +282,35 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="excludeTags">A list of tag names that series match none of, optional, no default value.</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetCategoryRelatedTags(int id, List<string> tags, DateTime? realtimeStart = null,
-            DateTime? realtimeEnd = null, int limit = 1000, int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount,
-            SortOrder sortOrder = SortOrder.Ascending, string searchText = null, TagGroupId tagGroupId = TagGroupId.None,
-            List<string> excludeTags = null)
+        public async Task<List<Tag>> GetCategoryRelatedTags(RelatedTagParameters parameters)
         {
             string url = $"category/related_tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"category_id", id.ToString() },
-                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"category_id", parameters.Id.ToString() },
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags)},
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -387,28 +342,19 @@ namespace Fred.Net
         /// <param name="orderBy">Order results by values of the specified attribute, optional, default: Id</param>
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: asc</param>
         /// <returns>List<Release></returns>
-        public async Task<List<Release>> GetReleases(DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, ReleaseOrderBy orderBy = ReleaseOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending)
+        public async Task<List<Release>> GetReleases(ReleasesParameters parameters)
         {
             string url = $"releases";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -436,30 +382,20 @@ namespace Fred.Net
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: asc</param>
         /// <param name="includeReleaseDatesWithNoData">Determines whether release dates with no data available are returned, optional, default: false</param>
         /// <returns>List<Release></returns>
-        public async Task<List<ReleaseDate>> GetReleasesDates(DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, ReleaseDateOrderBy orderBy = ReleaseDateOrderBy.Date, SortOrder sortOrder = SortOrder.Ascending,
-            bool includeReleaseDatesWithNoData = false)
+        public async Task<List<ReleaseDate>> GetReleasesDates(ReleasesDatesParameters parameters)
         {
             string url = $"releases/dates";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) },
-                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) },
+                {"include_release_dates_with_no_data", parameters.IncludeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -483,24 +419,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>Release</returns>
-        public async Task<Release> GetRelease(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<Release> GetRelease(ReleaseParameters parameters)
         {
             string url = $"release";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() }
+                {"release_id", parameters.Id.ToString() }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -522,31 +450,21 @@ namespace Fred.Net
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: asc</param>
         /// <param name="includeReleaseDatesWithNoData">Determines whether release dates with no data available are returned, optional, default: false</param>
         /// <returns>List<Release></returns>
-        public async Task<List<ReleaseDate>> GetReleaseDates(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 10000, int offset = 0, ReleaseDateOrderBy orderBy = ReleaseDateOrderBy.Date, SortOrder sortOrder = SortOrder.Ascending,
-            bool includeReleaseDatesWithNoData = false)
+        public async Task<List<ReleaseDate>> GetReleaseDates(ReleaseDatesParameters parameters)
         {
             string url = $"release/dates";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) },
-                {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
+                {"release_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) },
+                {"include_release_dates_with_no_data", parameters.IncludeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -578,46 +496,35 @@ namespace Fred.Net
         /// <param name="tags">A list of tag names that series match all of, optional, no filtering by tags by default</param>
         /// <param name="excludeTags">A list of tag names that series match none of, it requires that parameter tags also be set to limit the number of matching series, optional, no filtering by tags by default.</param>
         /// <returns>Release</returns>
-        public async Task<List<Series>> GetReleaseSeries(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, SeriesOrderBy orderBy = SeriesOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending,
-            SeriesFilterVariable filterVariable = SeriesFilterVariable.None, string filterValue = null, List<string> tags = null,
-            List<string> excludeTags = null)
+        public async Task<List<Series>> GetReleaseSeries(ReleaseSeriesParameters parameters)
         {
             string url = $"release/series";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"release_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (parameters.FilterVariable != SeriesFilterVariable.None)
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("filter_variable", EnumDescription.GetDescription(parameters.FilterVariable));
+                query.Add("filter_value", parameters.FilterValue);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            if (filterVariable != SeriesFilterVariable.None)
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
-                query.Add("filter_value", filterValue);
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -642,24 +549,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>Release</returns>
-        public async Task<List<Source>> GetReleaseSources(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<List<Source>> GetReleaseSources(ReleaseSourcesParameters parameters)
         {
             string url = $"release/sources";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() }
+                {"release_id", parameters.Id.ToString() }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -690,44 +589,34 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="tags">A list of tag names to only include in the response, optional, no filtering by tags by default</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetReleaseTags(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending, string searchText = null,
-            TagGroupId tagGroupId = TagGroupId.None, List<string> tags = null)
+        public async Task<List<Tag>> GetReleaseTags(TagParameters parameters)
         {
             string url = $"release/tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"release_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -760,46 +649,35 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="excludeTags">A list of tag names that series match none of, optional, no default value.</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetReleaseRelatedTags(int id, List<string> tags, DateTime? realtimeStart = null,
-            DateTime? realtimeEnd = null, int limit = 1000, int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount,
-            SortOrder sortOrder = SortOrder.Ascending, string searchText = null, TagGroupId tagGroupId = TagGroupId.None,
-            List<string> excludeTags = null)
+        public async Task<List<Tag>> GetReleaseRelatedTags(RelatedTagParameters parameters)
         {
             string url = $"release/related_tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() },
-                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"release_id", parameters.Id.ToString() },
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags)},
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -825,25 +703,24 @@ namespace Fred.Net
         /// <param name="includeObservationValues">A flag to indicate that observations need to be returned.</param>
         /// <param name="observation_date">The observation date to be included with the returned release table, optional, default: Latest available</param>
         /// <returns>List<Element></returns>
-        public async Task<List<Element>> GetReleaseTables(int id, int? elementId = null, bool includeObservationValues = false,
-            DateTime? observationDate = null)
+        public async Task<List<Element>> GetReleaseTables(ElementParameters parameters)
         {
             string url = $"release/tables";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"release_id", id.ToString() },
-                {"include_observation_values", includeObservationValues.ToString() }
+                {"release_id", parameters.Id.ToString() },
+                {"include_observation_values", parameters.IncludeObservationValues.ToString() }
             };
 
-            if (elementId.HasValue)
+            if (parameters.ElementId.HasValue)
             {
-                query.Add("element_id", elementId.ToString());
+                query.Add("element_id", parameters.ElementId.ToString());
             }
 
-            if (observationDate.HasValue)
+            if (parameters.ObservationDate.HasValue)
             {
-                query.Add("observation_date", DateTimeFormat.FormatDate(observationDate.Value));
+                query.Add("observation_date", DateTimeFormat.FormatDate(parameters.ObservationDate.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -877,24 +754,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>Series</returns>
-        public async Task<Series> GetSeries(string id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<Series> GetSeries(SeriesParameters parameters)
         {
             string url = $"series";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_id", id }
+                {"series_id", parameters.Id }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -911,24 +780,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>List<Category></returns>
-        public async Task<List<Category>> GetSeriesCategories(string id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<List<Category>> GetSeriesCategories(SeriesCategoriesParameters parameters)
         {
             string url = $"series/categories";
 
             NameValueCollection query = new NameValueCollection
             {
-                { "series_id", id },
+                { "series_id", parameters.Id },
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -962,54 +823,41 @@ namespace Fred.Net
         /// <param name="outputType">An integer that indicates an output type, optional, default: RealTimePeriod</param>
         /// <param name="VintageDates">A list of dates in history (e.g. 2000-01-01,2005-02-24)</param>
         /// <returns></returns>
-        public async Task<List<Observation>> GetSeriesObservations(string id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 100000, int offset = 0, SortOrder sortOrder = SortOrder.Ascending, DateTime? observationStart = null,
-            DateTime? observationEnd = null, SeriesObservationUnit unit = SeriesObservationUnit.Levels,
-            SeriesObservationFrequency frequency = SeriesObservationFrequency.None,
-            SeriesObservationAggregationMethod aggregationMethod = SeriesObservationAggregationMethod.Average,
-            SeriesObservationOutputType outputType = SeriesObservationOutputType.RealTimePeriod, List<DateTime> vintageDates = null)
+        public async Task<List<Observation>> GetSeriesObservations(ObservationParameters parameters)
         {
             string url = $"series/observations";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_id", id },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) },
-                {"units", EnumDescription.GetDescription(unit)},
-                {"aggregation_method", EnumDescription.GetDescription(aggregationMethod) },
-                {"output_type", EnumDescription.GetDescription(outputType)}
+                {"series_id", parameters.Id },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) },
+                {"units", EnumDescription.GetDescription(parameters.Unit)},
+                {"aggregation_method", EnumDescription.GetDescription(parameters.AggregationMethod) },
+                {"output_type", EnumDescription.GetDescription(parameters.OutputType)}
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (parameters.Start.HasValue)
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("observation_start", DateTimeFormat.FormatDate(parameters.Start.Value));
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.End.HasValue)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("observation_end", DateTimeFormat.FormatDate(parameters.End.Value));
             }
 
-            if (observationStart.HasValue)
+            if (parameters.Frequency != SeriesObservationFrequency.None)
             {
-                query.Add("observation_start", DateTimeFormat.FormatDate(observationStart.Value));
+                query.Add("frequency", EnumDescription.GetDescription(parameters.Frequency));
             }
 
-            if (observationEnd.HasValue)
+            if (parameters.VintageDates != null && parameters.VintageDates.Any())
             {
-                query.Add("observation_end", DateTimeFormat.FormatDate(observationEnd.Value));
-            }
-
-            if (frequency != SeriesObservationFrequency.None)
-            {
-                query.Add("frequency", EnumDescription.GetDescription(frequency));
-            }
-
-            if (vintageDates != null && vintageDates.Any())
-            {
-                query.Add("vintage_dates", Separator.GetDatesSeparatedByComma(vintageDates));
+                query.Add("vintage_dates", Separator.GetDatesSeparatedByComma(parameters.VintageDates));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1034,24 +882,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>Release</returns>
-        public async Task<Release> GetSeriesRelease(string id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<Release> GetSeriesRelease(SeriesReleaseParameters parameters)
         {
             string url = $"series/release";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_id", id }
+                {"series_id", parameters.Id }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1077,52 +917,40 @@ namespace Fred.Net
         /// <param name="tags">A list of tag names that series match all of, optional, no filtering by tags by default</param>
         /// <param name="excludeTags">A list of tag names that series match none of, it requires that parameter tags also be set to limit the number of matching series, optional, no filtering by tags by default.</param>
         /// <returns>List<Series></returns>
-        public async Task<List<Series>> SearchSeries(string searchText, SeriesSearchType searchType = SeriesSearchType.FullText,
-            DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000, int offset = 0,
-            SeriesSearchOrderBy orderBy = SeriesSearchOrderBy.None, SortOrder sortOrder = SortOrder.Ascending,
-            SeriesFilterVariable filterVariable = SeriesFilterVariable.None, string filterValue = null, List<string> tags = null,
-            List<string> excludeTags = null)
+        public async Task<List<Series>> SearchSeries(SeriesSearchParameters parameters)
         {
             string url = $"series/search";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"search_text", searchText },
-                {"search_type", EnumDescription.GetDescription(searchType) },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"search_text", parameters.SearchText },
+                {"search_type", EnumDescription.GetDescription(parameters.SearchType) },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (orderBy != SeriesSearchOrderBy.None)
+            if (parameters.OrderBy != SeriesSearchOrderBy.None)
             {
-                query.Add("order_by", EnumDescription.GetDescription(orderBy));
+                query.Add("order_by", EnumDescription.GetDescription(parameters.OrderBy));
             }
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (parameters.FilterVariable != SeriesFilterVariable.None)
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("filter_variable", EnumDescription.GetDescription(parameters.FilterVariable));
+                query.Add("filter_value", parameters.FilterValue);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            if (filterVariable != SeriesFilterVariable.None)
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
-                query.Add("filter_value", filterValue);
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1154,44 +982,34 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="tags">A list of tag names to only include in the response, optional, no filtering by tags by default</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> SearchSeriesTags(string seriesSearchText, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending,
-            string tagSearchText = null, TagGroupId tagGroupId = TagGroupId.None, List<string> tags = null)
+        public async Task<List<Tag>> SearchSeriesTags(TagSearchParameters parameters)
         {
             string url = $"series/search/tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_search_text", seriesSearchText },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"series_search_text", parameters.SeriesSearchText },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.TagSearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("tag_search_text", parameters.TagSearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(tagSearchText))
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("tag_search_text", tagSearchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1224,46 +1042,35 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="excludeTags">A list of tag names that series match none of, optional, no default value</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> SearchSeriesRelatedTags(string seriesSearchText, List<string> tags, DateTime? realtimeStart = null,
-            DateTime? realtimeEnd = null, int limit = 1000, int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount,
-            SortOrder sortOrder = SortOrder.Ascending, string tagSearchText = null, TagGroupId tagGroupId = TagGroupId.None,
-            List<string> excludeTags = null)
+        public async Task<List<Tag>> SearchSeriesRelatedTags(RelatedTagSearchParameters parameters)
         {
             string url = $"series/search/related_tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_search_text", seriesSearchText },
-                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags) },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"series_search_text", parameters.SeriesSearchText },
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags) },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.TagSearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("tag_search_text", parameters.TagSearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(tagSearchText))
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("tag_search_text", tagSearchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1290,27 +1097,18 @@ namespace Fred.Net
         /// <param name="orderBy">Order results by values of the specified attribute, optional, default: Id</param>
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: Ascending</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetSeriesTags(string seriesId, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending)
+        public async Task<List<Tag>> GetSeriesTags(SeriesTagsParameters parameters)
         {
             string url = $"series/tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_id", seriesId },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"series_id", parameters.SeriesId },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1338,37 +1136,27 @@ namespace Fred.Net
         /// <param name="startTime">Start time for limiting results for a time range, can filter down to minutes</param>
         /// <param name="endTime">End time for limiting results for a time range, can filter down to minutes</param>
         /// <returns>List<Series></returns>
-        public async Task<List<Series>> GetSeriesUpdates(DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, SeriesFilterValue filterValue = SeriesFilterValue.All, DateTime? startTime = null,
-            DateTime? endTime = null)
+        public async Task<List<Series>> GetSeriesUpdates(SeriesUpdatesParameters parameters)
         {
             string url = $"series/updates";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"filter_value", EnumDescription.GetDescription(filterValue) }
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"filter_value", EnumDescription.GetDescription(parameters.FilterValue) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (parameters.Start.HasValue)
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("start_time", DateTimeFormat.FormatTime(parameters.Start.Value));
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.End.HasValue)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
-
-            if (startTime.HasValue)
-            {
-                query.Add("start_time", DateTimeFormat.FormatTime(startTime.Value));
-            }
-
-            if (endTime.HasValue)
-            {
-                query.Add("end_time", DateTimeFormat.FormatTime(endTime.Value));
+                query.Add("end_time", DateTimeFormat.FormatTime(parameters.End.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1397,28 +1185,19 @@ namespace Fred.Net
         /// <param name="offset">non-negative integer, optional, default: 0</param>
         /// <param name="sortOrder">Sort results is ascending or descending vintage_date order, optional, default: asc</param>
         /// <returns>List<VintageDate></returns>
-        public async Task<List<VintageDate>> GetSeriesVintageDates(string seriesId, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, SortOrder sortOrder = SortOrder.Ascending)
+        public async Task<List<VintageDate>> GetSeriesVintageDates(VintageDateParameters parameters)
         {
             string url = $"series/vintagedates";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"series_id", seriesId },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"series_id", parameters.SeriesId },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1449,28 +1228,19 @@ namespace Fred.Net
         /// <param name="orderBy">Order results by values of the specified attribute, optional, default: Id</param>
         /// <param name="sortOrder">Sort results is ascending or descending vintage_date order, optional, default: Ascending</param>
         /// <returns>List<Source></returns>
-        public async Task<List<Source>> GetSources(DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, SourceOrderBy orderBy = SourceOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending)
+        public async Task<List<Source>> GetSources(SourcesParameters parameters)
         {
             string url = $"sources";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1494,24 +1264,16 @@ namespace Fred.Net
         /// <param name="realtimeStart">The start of the real-time period, optional, default: today's date</param>
         /// <param name="realtimeEnd">The end of the real-time period, optional, default: today's date</param>
         /// <returns>Source</returns>
-        public async Task<Source> GetSource(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null)
+        public async Task<Source> GetSource(SourceParameters parameters)
         {
             string url = $"source";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"source_id", id.ToString() },
+                {"source_id", parameters.Id.ToString() },
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1532,29 +1294,20 @@ namespace Fred.Net
         /// <param name="orderBy">Order results by values of the specified attribute, optional, default: Id</param>
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: asc</param>
         /// <returns>List<Release></returns>
-        public async Task<List<Release>> GetSourceReleases(int id, DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, ReleaseOrderBy orderBy = ReleaseOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending)
+        public async Task<List<Release>> GetSourceReleases(SourceReleaseParameters parameters)
         {
             string url = $"source/releases";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"source_id", id.ToString() },
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"source_id", parameters.Id.ToString() },
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
-
-            if (realtimeEnd.HasValue)
-            {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
             XmlDocument xmlDocument = await Request(url, query);
 
@@ -1588,43 +1341,33 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="tags">A list of tag names to only include in the response, optional, no filtering by tags by default</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetTags(DateTime? realtimeStart = null, DateTime? realtimeEnd = null, int limit = 1000,
-            int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending, string searchText = null,
-            TagGroupId tagGroupId = TagGroupId.None, List<string> tags = null)
+        public async Task<List<Tag>> GetTags(TagsParameters parameters)
         {
             string url = $"tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.Tags != null && parameters.Tags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (tags != null && tags.Any())
-            {
-                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1656,44 +1399,34 @@ namespace Fred.Net
         /// <param name="tagGroupId">A tag group id to filter tags by type, optional, no filtering by tag group by default.</param>
         /// <param name="excludeTags">A list of tag names that series match none of, optional, no default value.</param>
         /// <returns>List<Tag></returns>
-        public async Task<List<Tag>> GetRelatedTags(List<string> tags, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, TagOrderBy orderBy = TagOrderBy.SeriesCount, SortOrder sortOrder = SortOrder.Ascending,
-            string searchText = null, TagGroupId tagGroupId = TagGroupId.None, List<string> excludeTags = null)
+        public async Task<List<Tag>> GetRelatedTags(RelatedTagsParameters parameters)
         {
             string url = $"related_tags";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags)},
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
+            SetRealTimeParameters(parameters, query);
+
+            if (!string.IsNullOrEmpty(parameters.SearchText))
             {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
+                query.Add("search_text", parameters.SearchText);
             }
 
-            if (realtimeEnd.HasValue)
+            if (parameters.GroupId != TagGroupId.None)
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
+                query.Add("tag_group_id", EnumDescription.GetDescription(parameters.GroupId));
             }
 
-            if (!string.IsNullOrEmpty(searchText))
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("search_text", searchText);
-            }
-
-            if (tagGroupId != TagGroupId.None)
-            {
-                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1723,34 +1456,24 @@ namespace Fred.Net
         /// <param name="sortOrder">Sort results is ascending or descending order, optional, default: Ascending</param>
         /// <param name="excludeTags">A list of tag names that series match none of, optional, no default value.</param>
         /// <returns>List<Series></returns>
-        public async Task<List<Series>> GetTagsSeries(List<string> tags, DateTime? realtimeStart = null, DateTime? realtimeEnd = null,
-            int limit = 1000, int offset = 0, SeriesOrderBy orderBy = SeriesOrderBy.Id, SortOrder sortOrder = SortOrder.Ascending
-            , List<string> excludeTags = null)
+        public async Task<List<Series>> GetTagsSeries(TagsSeriesParameters parameters)
         {
             string url = $"tags/series";
 
             NameValueCollection query = new NameValueCollection
             {
-                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
-                {"limit", limit.ToString() },
-                {"offset", offset.ToString() },
-                {"order_by", EnumDescription.GetDescription(orderBy) },
-                {"sort_order", EnumDescription.GetDescription(sortOrder) }
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags)},
+                {"limit", parameters.Limit.ToString() },
+                {"offset", parameters.Offset.ToString() },
+                {"order_by", EnumDescription.GetDescription(parameters.OrderBy) },
+                {"sort_order", EnumDescription.GetDescription(parameters.SortOrder) }
             };
 
-            if (realtimeStart.HasValue)
-            {
-                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
-            }
+            SetRealTimeParameters(parameters, query);
 
-            if (realtimeEnd.HasValue)
+            if (parameters.ExcludeTags != null && parameters.ExcludeTags.Any())
             {
-                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
-            }
-
-            if (excludeTags != null && excludeTags.Any())
-            {
-                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1770,6 +1493,14 @@ namespace Fred.Net
         #endregion Tags
 
         #region Others
+
+        /// <summary>
+        /// Disposes the web client object
+        /// </summary>
+        public void Dispose()
+        {
+            _webClient.Dispose();
+        }
 
         /// <summary>
         /// All requests sends through this method
@@ -1792,12 +1523,17 @@ namespace Fred.Net
             return xmlDocument;
         }
 
-        /// <summary>
-        /// Disposes the web client object
-        /// </summary>
-        public void Dispose()
+        private void SetRealTimeParameters(RealTimeParameters parameters, NameValueCollection query)
         {
-            _webClient.Dispose();
+            if (parameters.RealTimeStart.HasValue)
+            {
+                query.Add("realtime_start", DateTimeFormat.FormatDate(parameters.RealTimeStart.Value));
+            }
+
+            if (parameters.RealTimeEnd.HasValue)
+            {
+                query.Add("realtime_end", DateTimeFormat.FormatDate(parameters.RealTimeEnd.Value));
+            }
         }
 
         #endregion Others

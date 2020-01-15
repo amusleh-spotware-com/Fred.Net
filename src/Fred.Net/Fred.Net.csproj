@@ -6,11 +6,22 @@
     <AssemblyName>Fred.Net</AssemblyName>
     <Description>A .Net library for interacting with St. Louis Fed API</Description>
     <Copyright></Copyright>
-    <PackageLicenseUrl>https://github.com/afhacker/Fred.Net/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/afhacker/Fred.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/afhacker/Fred.Net</RepositoryUrl>
     <PackageTags>Fed, Fred</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Version>2.0.0</Version>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
