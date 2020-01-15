@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Xml.Serialization;
 
-namespace Fred.Net.Types
+namespace Fred.Net.Models
 {
-    [XmlType("release")]
-    public class Release
+    [XmlType("source")]
+    public class Source
     {
         [XmlAttribute("id")]
         public int Id { get; set; }
@@ -17,9 +17,6 @@ namespace Fred.Net.Types
 
         [XmlAttribute("realtime_end")]
         public DateTime RealtimeEnd { get; set; }
-
-        [XmlAttribute("press_release")]
-        public bool PressRelease { get; set; }
 
         [XmlAttribute("link")]
         public string Link { get; set; }

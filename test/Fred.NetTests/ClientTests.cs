@@ -1,4 +1,4 @@
-﻿using Fred.Net.Types;
+﻿using Fred.Net.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Threading.Tasks;

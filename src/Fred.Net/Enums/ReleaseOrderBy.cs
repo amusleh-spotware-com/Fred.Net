@@ -1,14 +1,17 @@
 ﻿using System.ComponentModel;
 
-namespace Fred.Net.Types.Enums
+namespace Fred.Net.Enums
 {
-    public enum SourceOrderBy
+    public enum ReleaseOrderBy
     {
-        [Description("source_id")]
+        [Description("release_id")]
         Id,
 
         [Description("name")]
         Name,
+
+        [Description("press_release")]
+        PressRelease,
 
         [Description("realtime_start")]
         RealtimeStart,

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Fred.Net.Types.Enums
+namespace Fred.Net.Enums
 {
     public enum SeriesObservationAggregationMethod
     {

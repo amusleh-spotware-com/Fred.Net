@@ -1,5 +1,5 @@
-﻿using Fred.Net.Types;
-using Fred.Net.Types.Enums;
+﻿using Fred.Net.Models;
+using Fred.Net.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -7,22 +7,13 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
+using Fred.Net.Utils;
 
 namespace Fred.Net
 {
     public class Client : IDisposable
     {
         #region Fields
-
-        /// <summary>
-        /// It's the base URL for all requests
-        /// </summary>
-        private const string _baseUrl = "https://api.stlouisfed.org/fred/";
-
-        /// <summary>
-        /// The provided API key storage field
-        /// </summary>
-        private readonly string _apiKey;
 
         /// <summary>
         /// This web client object will be used during lift time of client object
@@ -35,15 +26,16 @@ namespace Fred.Net
         /// Creates an instance of Client class and initializes a web client which is responsible for sending web requests
         /// </summary>
         /// <param name="apiKey">Your Fred API key</param>
-        public Client(string apiKey)
+        /// <param name="baseUrl">The API base URL</param>
+        public Client(string apiKey, string baseUrl = "https://api.stlouisfed.org/fred/")
         {
-            _apiKey = apiKey;
+            ApiKey = apiKey;
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
             _webClient = new WebClient();
-            
-            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
-            _webClient.BaseAddress = _baseUrl;
+            _webClient.BaseAddress = baseUrl;
         }
 
         #region Properties
@@ -51,7 +43,7 @@ namespace Fred.Net
         /// <summary>
         /// Returns your provided API key during initialization
         /// </summary>
-        public string ApiKey => _apiKey;
+        public string ApiKey { get; }
 
         #endregion Properties
 
@@ -74,7 +66,7 @@ namespace Fred.Net
 
             XmlDocument xmlDocument = await Request(url, query);
 
-            Category result = Utility.Deserialize<Category>(xmlDocument.DocumentElement.InnerXml);
+            Category result = Deserializer.Deserialize<Category>(xmlDocument.DocumentElement.InnerXml);
 
             return result;
         }
@@ -98,12 +90,12 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -112,7 +104,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Category category = Utility.Deserialize<Category>(xmlNode.OuterXml);
+                Category category = Deserializer.Deserialize<Category>(xmlNode.OuterXml);
 
                 result.Add(category);
             }
@@ -141,12 +133,12 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -155,7 +147,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Category category = Utility.Deserialize<Category>(xmlNode.OuterXml);
+                Category category = Deserializer.Deserialize<Category>(xmlNode.OuterXml);
 
                 result.Add(category);
             }
@@ -191,34 +183,34 @@ namespace Fred.Net
                 {"category_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (filterVariable != SeriesFilterVariable.None)
             {
-                query.Add("filter_variable", Utility.GetDescription(filterVariable));
+                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
                 query.Add("filter_value", filterValue);
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -227,7 +219,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Series series = Utility.Deserialize<Series>(xmlNode.OuterXml);
+                Series series = Deserializer.Deserialize<Series>(xmlNode.OuterXml);
 
                 result.Add(series);
             }
@@ -265,18 +257,18 @@ namespace Fred.Net
                 {"category_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -286,12 +278,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -300,7 +292,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -334,21 +326,21 @@ namespace Fred.Net
             NameValueCollection query = new NameValueCollection
             {
                 {"category_id", id.ToString() },
-                {"tag_names", Utility.GetStringSeparatedBySemicolon(tags)},
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -358,12 +350,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -372,7 +364,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -404,18 +396,18 @@ namespace Fred.Net
             {
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -424,7 +416,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Release release = Utility.Deserialize<Release>(xmlNode.OuterXml);
+                Release release = Deserializer.Deserialize<Release>(xmlNode.OuterXml);
 
                 result.Add(release);
             }
@@ -454,19 +446,19 @@ namespace Fred.Net
             {
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) },
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) },
                 {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -475,7 +467,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                ReleaseDate releaseDate = Utility.Deserialize<ReleaseDate>(xmlNode.OuterXml);
+                ReleaseDate releaseDate = Deserializer.Deserialize<ReleaseDate>(xmlNode.OuterXml);
 
                 result.Add(releaseDate);
             }
@@ -502,17 +494,17 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
 
-            Release result = Utility.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
+            Release result = Deserializer.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
 
             return result;
         }
@@ -541,19 +533,19 @@ namespace Fred.Net
                 {"release_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) },
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) },
                 {"include_release_dates_with_no_data", includeReleaseDatesWithNoData.ToString().ToLowerInvariant() }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -562,7 +554,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                ReleaseDate releaseDate = Utility.Deserialize<ReleaseDate>(xmlNode.OuterXml);
+                ReleaseDate releaseDate = Deserializer.Deserialize<ReleaseDate>(xmlNode.OuterXml);
 
                 result.Add(releaseDate);
             }
@@ -598,34 +590,34 @@ namespace Fred.Net
                 {"release_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (filterVariable != SeriesFilterVariable.None)
             {
-                query.Add("filter_variable", Utility.GetDescription(filterVariable));
+                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
                 query.Add("filter_value", filterValue);
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -634,7 +626,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Series series = Utility.Deserialize<Series>(xmlNode.OuterXml);
+                Series series = Deserializer.Deserialize<Series>(xmlNode.OuterXml);
 
                 result.Add(series);
             }
@@ -661,12 +653,12 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -675,7 +667,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Source source = Utility.Deserialize<Source>(xmlNode.OuterXml);
+                Source source = Deserializer.Deserialize<Source>(xmlNode.OuterXml);
 
                 result.Add(source);
             }
@@ -709,18 +701,18 @@ namespace Fred.Net
                 {"release_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -730,12 +722,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -744,7 +736,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -778,21 +770,21 @@ namespace Fred.Net
             NameValueCollection query = new NameValueCollection
             {
                 {"release_id", id.ToString() },
-                {"tag_names", Utility.GetStringSeparatedBySemicolon(tags)},
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -802,12 +794,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -816,7 +808,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -851,7 +843,7 @@ namespace Fred.Net
 
             if (observationDate.HasValue)
             {
-                query.Add("observation_date", Utility.FormatDate(observationDate.Value));
+                query.Add("observation_date", DateTimeFormat.FormatDate(observationDate.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -865,7 +857,7 @@ namespace Fred.Net
                     continue;
                 }
 
-                Element element = Utility.Deserialize<Element>(xmlNode.OuterXml);
+                Element element = Deserializer.Deserialize<Element>(xmlNode.OuterXml);
 
                 result.Add(element);
             }
@@ -896,17 +888,17 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
 
-            Series result = Utility.Deserialize<Series>(xmlDocument.DocumentElement.InnerXml);
+            Series result = Deserializer.Deserialize<Series>(xmlDocument.DocumentElement.InnerXml);
 
             return result;
         }
@@ -930,12 +922,12 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -944,7 +936,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Category category = Utility.Deserialize<Category>(xmlNode.OuterXml);
+                Category category = Deserializer.Deserialize<Category>(xmlNode.OuterXml);
 
                 result.Add(category);
             }
@@ -984,40 +976,40 @@ namespace Fred.Net
                 {"series_id", id },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"sort_order", Utility.GetDescription(sortOrder) },
-                {"units", Utility.GetDescription(unit)},
-                {"aggregation_method", Utility.GetDescription(aggregationMethod) },
-                {"output_type", Utility.GetDescription(outputType)}
+                {"sort_order", EnumDescription.GetDescription(sortOrder) },
+                {"units", EnumDescription.GetDescription(unit)},
+                {"aggregation_method", EnumDescription.GetDescription(aggregationMethod) },
+                {"output_type", EnumDescription.GetDescription(outputType)}
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (observationStart.HasValue)
             {
-                query.Add("observation_start", Utility.FormatDate(observationStart.Value));
+                query.Add("observation_start", DateTimeFormat.FormatDate(observationStart.Value));
             }
 
             if (observationEnd.HasValue)
             {
-                query.Add("observation_end", Utility.FormatDate(observationEnd.Value));
+                query.Add("observation_end", DateTimeFormat.FormatDate(observationEnd.Value));
             }
 
             if (frequency != SeriesObservationFrequency.None)
             {
-                query.Add("frequency", Utility.GetDescription(frequency));
+                query.Add("frequency", EnumDescription.GetDescription(frequency));
             }
 
             if (vintageDates != null && vintageDates.Any())
             {
-                query.Add("vintage_dates", Utility.GetDatesSeparatedByComma(vintageDates));
+                query.Add("vintage_dates", Separator.GetDatesSeparatedByComma(vintageDates));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1026,7 +1018,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Observation observation = Utility.Deserialize<Observation>(xmlNode.OuterXml);
+                Observation observation = Deserializer.Deserialize<Observation>(xmlNode.OuterXml);
 
                 result.Add(observation);
             }
@@ -1053,17 +1045,17 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
 
-            Release result = Utility.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
+            Release result = Deserializer.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
 
             return result;
         }
@@ -1096,41 +1088,41 @@ namespace Fred.Net
             NameValueCollection query = new NameValueCollection
             {
                 {"search_text", searchText },
-                {"search_type", Utility.GetDescription(searchType) },
+                {"search_type", EnumDescription.GetDescription(searchType) },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (orderBy != SeriesSearchOrderBy.None)
             {
-                query.Add("order_by", Utility.GetDescription(orderBy));
+                query.Add("order_by", EnumDescription.GetDescription(orderBy));
             }
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (filterVariable != SeriesFilterVariable.None)
             {
-                query.Add("filter_variable", Utility.GetDescription(filterVariable));
+                query.Add("filter_variable", EnumDescription.GetDescription(filterVariable));
                 query.Add("filter_value", filterValue);
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1139,7 +1131,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Series series = Utility.Deserialize<Series>(xmlNode.OuterXml);
+                Series series = Deserializer.Deserialize<Series>(xmlNode.OuterXml);
 
                 result.Add(series);
             }
@@ -1173,18 +1165,18 @@ namespace Fred.Net
                 {"series_search_text", seriesSearchText },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(tagSearchText))
@@ -1194,12 +1186,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1208,7 +1200,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -1242,21 +1234,21 @@ namespace Fred.Net
             NameValueCollection query = new NameValueCollection
             {
                 {"series_search_text", seriesSearchText },
-                {"tag_names", Utility.GetStringSeparatedBySemicolon(tags) },
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags) },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(tagSearchText))
@@ -1266,12 +1258,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1280,7 +1272,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -1306,18 +1298,18 @@ namespace Fred.Net
             NameValueCollection query = new NameValueCollection
             {
                 {"series_id", seriesId },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1326,7 +1318,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -1356,27 +1348,27 @@ namespace Fred.Net
             {
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"filter_value", Utility.GetDescription(filterValue) }
+                {"filter_value", EnumDescription.GetDescription(filterValue) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (startTime.HasValue)
             {
-                query.Add("start_time", Utility.FormatTime(startTime.Value));
+                query.Add("start_time", DateTimeFormat.FormatTime(startTime.Value));
             }
 
             if (endTime.HasValue)
             {
-                query.Add("end_time", Utility.FormatTime(endTime.Value));
+                query.Add("end_time", DateTimeFormat.FormatTime(endTime.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1385,7 +1377,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Series series = Utility.Deserialize<Series>(xmlNode.OuterXml);
+                Series series = Deserializer.Deserialize<Series>(xmlNode.OuterXml);
 
                 result.Add(series);
             }
@@ -1415,17 +1407,17 @@ namespace Fred.Net
                 {"series_id", seriesId },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1434,7 +1426,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                VintageDate vintageDate = Utility.Deserialize<VintageDate>(xmlNode.OuterXml);
+                VintageDate vintageDate = Deserializer.Deserialize<VintageDate>(xmlNode.OuterXml);
 
                 result.Add(vintageDate);
             }
@@ -1466,18 +1458,18 @@ namespace Fred.Net
             {
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1486,7 +1478,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Source source = Utility.Deserialize<Source>(xmlNode.OuterXml);
+                Source source = Deserializer.Deserialize<Source>(xmlNode.OuterXml);
 
                 result.Add(source);
             }
@@ -1513,17 +1505,17 @@ namespace Fred.Net
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
 
-            Source result = Utility.Deserialize<Source>(xmlDocument.DocumentElement.InnerXml);
+            Source result = Deserializer.Deserialize<Source>(xmlDocument.DocumentElement.InnerXml);
 
             return result;
         }
@@ -1550,18 +1542,18 @@ namespace Fred.Net
                 {"source_id", id.ToString() },
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1570,7 +1562,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Release release = Utility.Deserialize<Release>(xmlNode.OuterXml);
+                Release release = Deserializer.Deserialize<Release>(xmlNode.OuterXml);
 
                 result.Add(release);
             }
@@ -1606,18 +1598,18 @@ namespace Fred.Net
             {
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -1627,12 +1619,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (tags != null && tags.Any())
             {
-                query.Add("tag_names", Utility.GetStringSeparatedBySemicolon(tags));
+                query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(tags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1641,7 +1633,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -1672,21 +1664,21 @@ namespace Fred.Net
 
             NameValueCollection query = new NameValueCollection
             {
-                {"tag_names", Utility.GetStringSeparatedBySemicolon(tags)},
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (!string.IsNullOrEmpty(searchText))
@@ -1696,12 +1688,12 @@ namespace Fred.Net
 
             if (tagGroupId != TagGroupId.None)
             {
-                query.Add("tag_group_id", Utility.GetDescription(tagGroupId));
+                query.Add("tag_group_id", EnumDescription.GetDescription(tagGroupId));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1710,7 +1702,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Tag tag = Utility.Deserialize<Tag>(xmlNode.OuterXml);
+                Tag tag = Deserializer.Deserialize<Tag>(xmlNode.OuterXml);
 
                 result.Add(tag);
             }
@@ -1739,26 +1731,26 @@ namespace Fred.Net
 
             NameValueCollection query = new NameValueCollection
             {
-                {"tag_names", Utility.GetStringSeparatedBySemicolon(tags)},
+                {"tag_names", Separator.GetStringSeparatedBySemicolon(tags)},
                 {"limit", limit.ToString() },
                 {"offset", offset.ToString() },
-                {"order_by", Utility.GetDescription(orderBy) },
-                {"sort_order", Utility.GetDescription(sortOrder) }
+                {"order_by", EnumDescription.GetDescription(orderBy) },
+                {"sort_order", EnumDescription.GetDescription(sortOrder) }
             };
 
             if (realtimeStart.HasValue)
             {
-                query.Add("realtime_start", Utility.FormatDate(realtimeStart.Value));
+                query.Add("realtime_start", DateTimeFormat.FormatDate(realtimeStart.Value));
             }
 
             if (realtimeEnd.HasValue)
             {
-                query.Add("realtime_end", Utility.FormatDate(realtimeEnd.Value));
+                query.Add("realtime_end", DateTimeFormat.FormatDate(realtimeEnd.Value));
             }
 
             if (excludeTags != null && excludeTags.Any())
             {
-                query.Add("exclude_tag_names", Utility.GetStringSeparatedBySemicolon(excludeTags));
+                query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(excludeTags));
             }
 
             XmlDocument xmlDocument = await Request(url, query);
@@ -1767,7 +1759,7 @@ namespace Fred.Net
 
             foreach (XmlNode xmlNode in xmlDocument.DocumentElement.ChildNodes)
             {
-                Series series = Utility.Deserialize<Series>(xmlNode.OuterXml);
+                Series series = Deserializer.Deserialize<Series>(xmlNode.OuterXml);
 
                 result.Add(series);
             }
@@ -1789,7 +1781,7 @@ namespace Fred.Net
         {
             _webClient.QueryString = query;
 
-            _webClient.QueryString.Add("api_key", _apiKey);
+            _webClient.QueryString.Add("api_key", ApiKey);
 
             string response = await _webClient.DownloadStringTaskAsync(url);
 

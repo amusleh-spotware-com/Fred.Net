@@ -1,9 +1,10 @@
-﻿using Fred.Net.Types.Enums;
+﻿using Fred.Net.Enums;
 using System;
 using System.Globalization;
 using System.Xml.Serialization;
+using Fred.Net.Utils;
 
-namespace Fred.Net.Types
+namespace Fred.Net.Models
 {
     [XmlType("tag")]
     public class Tag
@@ -15,7 +16,7 @@ namespace Fred.Net.Types
         public string GroupIdInString { get; set; }
 
         [XmlIgnore]
-        public TagGroupId GroupId => Utility.GetEnumValueFromDescription<TagGroupId>(GroupIdInString);
+        public TagGroupId GroupId => EnumDescription.GetValueFromDescription<TagGroupId>(GroupIdInString);
 
         [XmlAttribute("notes")]
         public string Notes { get; set; }

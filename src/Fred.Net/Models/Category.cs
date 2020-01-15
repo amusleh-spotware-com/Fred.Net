@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Fred.Net.Types
+namespace Fred.Net.Models
 {
     [XmlType("category")]
     public class Category

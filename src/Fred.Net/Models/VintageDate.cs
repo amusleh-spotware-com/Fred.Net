@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 
-namespace Fred.Net.Types
+namespace Fred.Net.Models
 {
     [XmlType("vintage_date")]
     public class VintageDate
