@@ -12,16 +12,12 @@
     <PackageTags>Fed, Fred</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseFile></PackageLicenseFile>
     <Version>2.0.0</Version>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <Company>AlgoDeveloper</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>AlgoDeveloper</Authors>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
 
 </Project>
