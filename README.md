@@ -20,7 +20,7 @@ var parameters = new ObservationParameters
 var result = await client.GetSeriesObservations(parameters);
 ```
 
-You can call all API requests via client class methods and each call will return its data in form of Fred.Net.Type classes.
+You can call all API requests via client class methods and each call will return its data in form of Fred.Net.Models classes.
 
 For using requests options parameters use the keyword arguments of each request method.
 
