@@ -12,7 +12,12 @@ St. Louis Fed API toolkit for .Net
 Client client = new Client(your_api_key);
 
 // For getting a series observations
-List<Observation> result = await client.GetSeriesObservations("GNPCA");
+var parameters = new ObservationParameters
+{
+    Id = "GNPCA",
+};
+
+var result = await client.GetSeriesObservations(parameters);
 ```
 
 You can call all API requests via client class methods and each call will return its data in form of Fred.Net.Type classes.
