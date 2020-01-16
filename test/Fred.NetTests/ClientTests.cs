@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Fred.Net.Parameters;
 
 namespace Fred.Net.Tests
 {
@@ -37,7 +38,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetCategoryChildren(13);
+            var parameters = new CategoryParameters
+            {
+                Id = 13
+            };
+
+            var result = await client.GetCategoryChildren(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -49,7 +55,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetCategoryRelated(32073);
+            var parameters = new CategoryParameters
+            {
+                Id = 32073
+            };
+
+            var result = await client.GetCategoryRelated(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -60,8 +71,13 @@ namespace Fred.Net.Tests
         public async Task GetCategorySeriesTest()
         {
             Client client = new Client(_apiKey);
+            
+            var parameters = new CategorySeriesParameters
+            {
+                Id = 125
+            };
 
-            var result = await client.GetCategorySeries(125);
+            var result = await client.GetCategorySeries(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -73,7 +89,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetCategoryTags(125);
+            var parameters = new TagParameters
+            {
+                Id = 125
+            };
+
+            var result = await client.GetCategoryTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -85,7 +106,13 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetCategoryRelatedTags(125, new List<string> { "services", "quarterly" });
+            var parameters = new RelatedTagParameters
+            {
+                Id = 125,
+                Tags = new List<string> { "services", "quarterly" }
+            };
+
+            var result = await client.GetCategoryRelatedTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -97,7 +124,9 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleases();
+            var parameters = new ReleasesParameters();
+
+            var result = await client.GetReleases(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -109,7 +138,9 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleasesDates();
+            var parameters = new ReleasesDatesParameters();
+
+            var result = await client.GetReleasesDates(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -121,7 +152,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetRelease(53);
+            var parameters = new ReleaseParameters
+            {
+                Id = 53
+            };
+
+            var result = await client.GetRelease(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -133,7 +169,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseDates(82);
+            var parameters = new ReleaseDatesParameters
+            {
+                Id = 82
+            };
+
+            var result = await client.GetReleaseDates(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -145,7 +186,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseSeries(51);
+            var parameters = new ReleaseSeriesParameters
+            {
+                Id = 51
+            };
+
+            var result = await client.GetReleaseSeries(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -157,7 +203,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseSources(51);
+            var parameters = new ReleaseSourcesParameters
+            {
+                Id = 51
+            };
+
+            var result = await client.GetReleaseSources(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -169,7 +220,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseTags(86);
+            var parameters = new TagParameters
+            {
+                Id = 86
+            };
+
+            var result = await client.GetReleaseTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -181,7 +237,13 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseRelatedTags(86, new List<string> { "sa", "foreign" });
+            var parameters = new RelatedTagParameters
+            {
+                Id = 86,
+                Tags = new List<string> { "sa", "foreign" }
+            };
+
+            var result = await client.GetReleaseRelatedTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -193,7 +255,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetReleaseTables(53);
+            var parameters = new ElementParameters
+            {
+                Id = 53,
+            };
+
+            var result = await client.GetReleaseTables(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -205,7 +272,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeries("GNPCA");
+            var parameters = new SeriesParameters
+            {
+                Id = "GNPCA",
+            };
+
+            var result = await client.GetSeries(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -218,7 +290,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesCategories("EXJPUS");
+            var parameters = new SeriesCategoriesParameters
+            {
+                Id = "EXJPUS",
+            };
+
+            var result = await client.GetSeriesCategories(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -230,7 +307,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesObservations("GNPCA");
+            var parameters = new ObservationParameters
+            {
+                Id = "GNPCA",
+            };
+
+            var result = await client.GetSeriesObservations(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -242,7 +324,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesRelease("IRA");
+            var parameters = new SeriesReleaseParameters
+            {
+                Id = "IRA",
+            };
+
+            var result = await client.GetSeriesRelease(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -254,7 +341,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.SearchSeries("monetary service index");
+            var parameters = new SeriesSearchParameters
+            {
+                SearchText = "monetary service index",
+            };
+
+            var result = await client.SearchSeries(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -266,7 +358,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.SearchSeriesTags("monetary service index");
+            var parameters = new TagSearchParameters
+            {
+                SeriesSearchText = "monetary service index",
+            };
+
+            var result = await client.SearchSeriesTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -278,7 +375,13 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.SearchSeriesRelatedTags("mortgage rate", new List<string> { "30-year", "frb" });
+            var parameters = new RelatedTagSearchParameters
+            {
+                SeriesSearchText = "mortgage rate",
+                Tags = new List<string> { "30-year", "frb" }
+            };
+
+            var result = await client.SearchSeriesRelatedTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -290,7 +393,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesTags("STLFSI");
+            var parameters = new SeriesTagsParameters
+            {
+                SeriesId = "STLFSI",
+            };
+
+            var result = await client.GetSeriesTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -302,7 +410,11 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesUpdates();
+            var parameters = new SeriesUpdatesParameters
+            {
+            };
+
+            var result = await client.GetSeriesUpdates(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -314,7 +426,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSeriesVintageDates("GNPCA");
+            var parameters = new VintageDateParameters
+            {
+                SeriesId = "GNPCA"
+            };
+
+            var result = await client.GetSeriesVintageDates(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -326,7 +443,11 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSources();
+            var parameters = new SourcesParameters
+            {
+            };
+
+            var result = await client.GetSources(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -338,7 +459,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSource(1);
+            var parameters = new SourceParameters
+            {
+                Id = 1
+            };
+
+            var result = await client.GetSource(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -350,7 +476,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetSourceReleases(1);
+            var parameters = new SourceReleaseParameters
+            {
+                Id = 1
+            };
+
+            var result = await client.GetSourceReleases(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -362,7 +493,11 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetTags();
+            var parameters = new TagsParameters
+            {
+            };
+
+            var result = await client.GetTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -374,7 +509,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetRelatedTags(new List<string> { "monetary aggregates", "weekly" });
+            var parameters = new RelatedTagsParameters
+            {
+                Tags = new List<string> { "monetary aggregates", "weekly" }
+            };
+
+            var result = await client.GetRelatedTags(parameters);
 
             Assert.AreNotEqual(null, result);
 
@@ -386,7 +526,12 @@ namespace Fred.Net.Tests
         {
             Client client = new Client(_apiKey);
 
-            var result = await client.GetTagsSeries(new List<string> { "slovenia", "food", "oecd" });
+            var parameters = new TagsSeriesParameters
+            {
+                Tags = new List<string> { "slovenia", "food", "oecd" }
+            };
+
+            var result = await client.GetTagsSeries(parameters);
 
             Assert.AreNotEqual(null, result);
 

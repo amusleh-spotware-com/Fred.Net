@@ -67,7 +67,7 @@ namespace Fred.Net
                 { "category_id", id.ToString() },
             };
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             Category result = Deserializer.Deserialize<Category>(xmlDocument.DocumentElement.InnerXml);
 
@@ -93,7 +93,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Category> result = new List<Category>();
 
@@ -128,7 +128,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Category> result = new List<Category>();
 
@@ -189,7 +189,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Series> result = new List<Series>();
 
@@ -252,7 +252,7 @@ namespace Fred.Net
                 query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -313,7 +313,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -356,7 +356,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Release> result = new List<Release>();
 
@@ -397,7 +397,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<ReleaseDate> result = new List<ReleaseDate>();
 
@@ -430,7 +430,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             Release result = Deserializer.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
 
@@ -466,7 +466,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<ReleaseDate> result = new List<ReleaseDate>();
 
@@ -527,7 +527,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Series> result = new List<Series>();
 
@@ -560,7 +560,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Source> result = new List<Source>();
 
@@ -619,7 +619,7 @@ namespace Fred.Net
                 query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -680,7 +680,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -723,7 +723,7 @@ namespace Fred.Net
                 query.Add("observation_date", DateTimeFormat.FormatDate(parameters.ObservationDate.Value));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Element> result = new List<Element>();
 
@@ -765,7 +765,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             Series result = Deserializer.Deserialize<Series>(xmlDocument.DocumentElement.InnerXml);
 
@@ -791,7 +791,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Category> result = new List<Category>();
 
@@ -860,7 +860,7 @@ namespace Fred.Net
                 query.Add("vintage_dates", Separator.GetDatesSeparatedByComma(parameters.VintageDates));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Observation> result = new List<Observation>();
 
@@ -893,7 +893,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             Release result = Deserializer.Deserialize<Release>(xmlDocument.DocumentElement.InnerXml);
 
@@ -953,7 +953,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Series> result = new List<Series>();
 
@@ -1012,7 +1012,7 @@ namespace Fred.Net
                 query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -1073,7 +1073,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -1110,7 +1110,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -1159,7 +1159,7 @@ namespace Fred.Net
                 query.Add("end_time", DateTimeFormat.FormatTime(parameters.End.Value));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Series> result = new List<Series>();
 
@@ -1199,7 +1199,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<VintageDate> result = new List<VintageDate>();
 
@@ -1242,7 +1242,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Source> result = new List<Source>();
 
@@ -1275,7 +1275,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             Source result = Deserializer.Deserialize<Source>(xmlDocument.DocumentElement.InnerXml);
 
@@ -1309,7 +1309,7 @@ namespace Fred.Net
 
             SetRealTimeParameters(parameters, query);
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Release> result = new List<Release>();
 
@@ -1370,7 +1370,7 @@ namespace Fred.Net
                 query.Add("tag_names", Separator.GetStringSeparatedBySemicolon(parameters.Tags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -1429,7 +1429,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Tag> result = new List<Tag>();
 
@@ -1476,7 +1476,7 @@ namespace Fred.Net
                 query.Add("exclude_tag_names", Separator.GetStringSeparatedBySemicolon(parameters.ExcludeTags));
             }
 
-            XmlDocument xmlDocument = await Request(url, query);
+            XmlDocument xmlDocument = await Request(url, query).ConfigureAwait(false);
 
             List<Series> result = new List<Series>();
 
@@ -1514,7 +1514,7 @@ namespace Fred.Net
 
             _webClient.QueryString.Add("api_key", ApiKey);
 
-            string response = await _webClient.DownloadStringTaskAsync(url);
+            string response = await _webClient.DownloadStringTaskAsync(url).ConfigureAwait(false);
 
             XmlDocument xmlDocument = new XmlDocument();
 
